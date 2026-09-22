@@ -6,11 +6,11 @@ A Claude Code plugin that lets you build reusable **solution signatures** for an
 
 ## What is TypeSafe Jev?
 
-TypeSafe Jev is a "System One" AI model that returns **typed, calibrated judgments** instead of generating text. You define what to classify (a Choice), score (a Score), or verify (a Noul), and Jev returns a structured answer with a probability distribution — fast, cheap, and directly consumable by code.
+Jev from Typesafe.ai is a "System One" AI model that returns **typed, calibrated judgments** instead of generating text. You define what to classify (a Choice), score (a Score), or verify (a Noul), and Jev returns a structured answer with a probability distribution — fast, cheap, and directly consumable by code.
 
 This plugin wraps that API into a two-step workflow:
 
-1. **Create a signature** — describe your use case once; the plugin generates a `.sig.json` file
+1. **Create a signature** — describe your use case once; the plugin generates a `.sig.json` file that includes the state and questions.
 2. **Run a dataset** — point it at a CSV or Excel file; the plugin calls Jev for every row and writes results back to Excel
 
 ---
