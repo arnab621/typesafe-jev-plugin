@@ -1,6 +1,6 @@
 # typesafe-jev-plugin
 
-A Claude Code plugin that lets you build reusable **solution signatures** for any classification or scoring problem, then run CSV, Excel, or text file datasets through the [TypeSafe Jev](https://docs.typesafe.ai) API and export structured results to Excel — all from within Claude Code.
+A Claude plugin that lets you build reusable **solution signatures** for any classification or scoring problem, then run CSV, Excel, or text file datasets through the [TypeSafe Jev](https://docs.typesafe.ai) API and export structured results to Excel — all from within Claude Code.
 
 ---
 
@@ -20,6 +20,7 @@ This plugin wraps that API into a two-step workflow:
 | Requirement | Notes |
 |---|---|
 | [Claude Code](https://claude.ai/code) | Plugin host |
+| [Claude or Cowork](https://claude.ai) | Plugin host |
 | TypeSafe API key | Sign up at [typesafe.ai](https://typesafe.ai) |
 | Python 3.9+ | Must be on your PATH |
 | `requests` + `openpyxl` | `pip install requests openpyxl` |
