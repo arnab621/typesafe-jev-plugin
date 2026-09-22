@@ -1,0 +1,11 @@
+{
+  "name": "typesafe-jev",
+  "owner": { "name": "Arnab Dutta" },
+  "plugins": [
+    {
+      "name": "typesafe-jev-plugin",
+      "source": "./",
+      "description": "Create and run TypeSafe Jev solution signatures against CSV/Excel datasets"
+    }
+  ]
+}
