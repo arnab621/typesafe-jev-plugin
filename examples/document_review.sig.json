@@ -1,0 +1,132 @@
+{
+  "name": "Document Review",
+  "description": "Scores a research paper, technical report, or white paper across methodology, argument, evidence, and originality, and produces an editorial recommendation.",
+  "version": "1.0.0",
+  "model": "jev-1.13.0",
+  "state_template": {
+    "document": "${file}",
+    "filename": "${filename}"
+  },
+  "questions": {
+    "document_type": {
+      "type": "choice",
+      "instructions": "What best describes the type of document in `document`? Judge from its structure, intent, and conventions — not the topic.",
+      "criteria": {
+        "research_paper": "Reports original empirical or theoretical work: hypothesis, methodology, results, and discussion. Written for a peer audience.",
+        "technical_report": "Documents the design, implementation, or evaluation of a system, tool, or process. Results-oriented, internal or semi-public audience.",
+        "white_paper": "Advocates a position or solution to a problem for a non-specialist audience. Combines evidence with persuasion. Often commercial or policy-oriented.",
+        "literature_review": "Synthesises existing research on a topic. No original data collection; contribution is the synthesis and framing.",
+        "case_study": "An in-depth examination of a specific instance, project, or organisation. Primarily descriptive with some analytical commentary.",
+        "other": "The document does not fit clearly into the above types."
+      }
+    },
+    "methodological_rigor": {
+      "type": "score",
+      "instructions": {
+        "question": "Rate the rigour of the methodology or analytical approach described in the document.",
+        "guidance": "Judge from what the document describes about how the work was conducted, validated, and reported. If no methodology is described or the document is purely argumentative, score at the lowest level that fits. Do not reward ambition — reward demonstrated rigour."
+      },
+      "criteria": [
+        "No methodology: purely opinionated or descriptive, no systematic approach described.",
+        "Weak: an approach is described but lacks detail on sampling, controls, or validation. Results cannot be reproduced.",
+        "Adequate: methodology is described clearly enough to understand what was done, though some gaps remain in validation or scope.",
+        "Strong: methodology is well-specified, controls for obvious confounds, and results are validated. Minor gaps do not undermine the findings.",
+        "Rigorous: methodology is complete, reproducible, and addresses its own limitations. Would pass peer review at a selective venue."
+      ]
+    },
+    "argument_clarity": {
+      "type": "score",
+      "instructions": "Rate how clearly the document's central thesis or purpose is stated and maintained throughout.",
+      "criteria": [
+        "No discernible thesis: the purpose of the document is unclear after reading.",
+        "Weak: a thesis exists but is buried, inconsistently stated, or frequently lost in the body.",
+        "Adequate: the thesis is clear at the start and can be followed, though the argument meanders at times.",
+        "Clear: thesis is prominent, body stays on-topic, conclusions follow from the argument.",
+        "Excellent: a single, precise claim is established early, every section earns its place, and the conclusion is a direct payoff of the opening."
+      ]
+    },
+    "evidence_quality": {
+      "type": "score",
+      "instructions": "Rate the quality of evidence or data used to support the document's claims. Ignore the number of citations — judge the fit and strength of the evidence actually used.",
+      "criteria": [
+        "No evidence: claims are made without any supporting data, citations, or examples.",
+        "Anecdotal: relies on isolated examples or weak secondary sources that do not generalise.",
+        "Moderate: uses credible sources but evidence is selective, cherry-picked, or not directly responsive to the claims.",
+        "Good: evidence directly supports the claims, sources are credible, and counterevidence is acknowledged.",
+        "Comprehensive: evidence is strong, multi-sourced, addresses counterarguments, and is proportionate to the scope of the claims."
+      ]
+    },
+    "originality": {
+      "type": "score",
+      "instructions": "Rate the novelty of the intellectual contribution. Score the contribution shown, not the ambition stated. If the document does not situate itself relative to prior work, score conservatively.",
+      "criteria": [
+        "Derivative: restates or summarises existing work with no new angle, framing, or finding.",
+        "Incremental: applies known methods to a familiar problem; small refinement over existing work.",
+        "Moderate: offers a new application, combination, or context that is not obvious, though the core ideas are established.",
+        "Significant: advances the state of the field in a meaningful, non-obvious way — new findings, a new framework, or a compelling reframing.",
+        "Groundbreaking: opens a new line of inquiry, invalidates a prevailing assumption, or produces findings that will reshape how practitioners approach the problem."
+      ]
+    },
+    "ready_for_external_review": {
+      "type": "noul",
+      "instructions": "Is the document sufficiently complete and polished to send to an external reviewer or publish to an external audience as-is?",
+      "criteria": {
+        "true": "The document is coherent, complete, and professionally presented. An external reader could evaluate it fairly without needing the author to explain gaps.",
+        "false": "The document has structural gaps, unfinished sections, or presentation issues that would distract or mislead an external reader before those are resolved."
+      }
+    },
+    "has_critical_flaws": {
+      "type": "noul",
+      "instructions": "Does the document contain a fundamental flaw that undermines its central claims — regardless of how well it is written?",
+      "criteria": {
+        "true": "There is at least one flaw (methodological, logical, or factual) that, if unaddressed, invalidates the main finding or recommendation.",
+        "false": "Weaknesses are present but none are fatal to the central claim. Revision could address them without restarting the work."
+      }
+    },
+    "editorial_recommendation": {
+      "type": "choice",
+      "instructions": "What is the appropriate editorial outcome for this document at this stage? Base the recommendation on the document as presented, not on its potential.",
+      "criteria": {
+        "accept": {
+          "what": "Publish or release with only copy-editing changes needed.",
+          "not_for": "Documents that need any substantive change to methodology, argument, or evidence.",
+          "examples": ["Polished papers with minor typos", "Final-draft reports that are publication-ready"]
+        },
+        "minor_revision": {
+          "what": "The core contribution is sound; specific, bounded changes are needed before acceptance.",
+          "not_for": "Documents where the structure, methodology, or central argument must change.",
+          "examples": ["Clarifying a figure", "Adding a missing related-work citation", "Tightening the conclusion"]
+        },
+        "major_revision": {
+          "what": "The direction is viable but significant work is needed — additional analysis, restructuring, or strengthening of evidence.",
+          "not_for": "Documents with a fundamental flaw that cannot be fixed through revision.",
+          "examples": ["Methodology needs a new control group", "Entire sections need rewriting", "Claims outrun the evidence significantly"]
+        },
+        "reject": {
+          "what": "The document should not proceed in its current form. Either the contribution is insufficient or a fundamental flaw cannot be corrected through revision.",
+          "not_for": "Documents where the problems are addressable through revision.",
+          "examples": ["Derivative work with no novel contribution", "Methodology invalidates the findings", "Central claim is demonstrably false"]
+        }
+      }
+    }
+  },
+  "output_template": {
+    "columns": [
+      { "header": "Document Type",        "path": "answers.document_type.choice" },
+      { "header": "Methodology Rigor",    "path": "answers.methodological_rigor.score" },
+      { "header": "Argument Clarity",     "path": "answers.argument_clarity.score" },
+      { "header": "Evidence Quality",     "path": "answers.evidence_quality.score" },
+      { "header": "Originality",          "path": "answers.originality.score" },
+      { "header": "Ready for Review",     "path": "answers.ready_for_external_review.noul" },
+      { "header": "Has Critical Flaws",   "path": "answers.has_critical_flaws.noul" },
+      { "header": "Recommendation",       "path": "answers.editorial_recommendation.choice" },
+      { "header": "Rec Confidence",       "path": "answers.editorial_recommendation.confidence" },
+      {
+        "header": "Flag for Review",
+        "type": "confidence_flag",
+        "path": "answers.editorial_recommendation.confidence",
+        "threshold": 0.65
+      }
+    ]
+  }
+}

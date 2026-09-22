@@ -1,0 +1,9 @@
+{
+  "name": "typesafe-jev-plugin",
+  "version": "0.1.0",
+  "description": "Create and run TypeSafe Jev solution signatures against CSV/Excel datasets",
+  "author": {
+    "name": "KPMG TTI"
+  },
+  "keywords": ["typesafe", "jev", "classification", "scoring", "ai", "tax"]
+}

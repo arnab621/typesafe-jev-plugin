@@ -1,0 +1,80 @@
+{
+  "name": "Support Agent Review",
+  "description": "Audits an AI customer-support agent session trace: checks resolution, factual consistency, policy adherence, escalation need, customer sentiment, and predicted CSAT.",
+  "version": "1.0.0",
+  "model": "jev-1.13.0",
+  "state_template": {
+    "session": "${file}"
+  },
+  "questions": {
+    "issue_resolved": {
+      "type": "noul",
+      "instructions": "The customer's issue was fully resolved within the session.",
+      "criteria": {
+        "true": "The need that drove the contact was met, or reliably set in motion, by the end of the session.",
+        "false": "The need was unmet, partially handled, or depends on steps that never happened."
+      }
+    },
+    "factually_consistent": {
+      "type": "noul",
+      "instructions": "Everything the agent told the customer is consistent with the data returned by its tools.",
+      "criteria": {
+        "true": "Every statement made to the customer matches the tool results in the trace.",
+        "false": "The agent told the customer something its own tool results do not support or contradict."
+      }
+    },
+    "policy_adherence": {
+      "type": "noul",
+      "instructions": "The agent's actions complied with the policies and procedures surfaced by its own tool calls during the session.",
+      "criteria": {
+        "true": "Every action respected the limits, approvals, and required steps stated in the session's policy data.",
+        "false": "At least one action violated or skipped something the session's own policy data requires."
+      }
+    },
+    "escalation_needed": {
+      "type": "noul",
+      "instructions": "This session needs human follow-up or review.",
+      "criteria": {
+        "true": "A person must intervene: outstanding commitments, missing approvals, or unresolved customer needs remain.",
+        "false": "Nothing remains that requires a person."
+      }
+    },
+    "customer_sentiment": {
+      "type": "choice",
+      "instructions": "What is the customer's sentiment at the close of the conversation?",
+      "criteria": {
+        "positive": "The customer ends pleased or grateful.",
+        "neutral": "The customer ends matter-of-fact, neither pleased nor upset.",
+        "negative": "The customer ends dissatisfied, frustrated, or angry.",
+        "mixed": "The customer expresses clearly conflicting feelings at the close."
+      }
+    },
+    "predicted_csat": {
+      "type": "score",
+      "instructions": "Predict the satisfaction rating this customer will give in a follow-up survey.",
+      "criteria": [
+        "Very dissatisfied: likely complaint, chargeback, or churn.",
+        "Dissatisfied: the outcome will fall short of what was promised or expected.",
+        "Neutral: acceptable outcome with noticeable friction.",
+        "Satisfied: issue handled competently and promptly.",
+        "Very satisfied: fast, complete resolution that exceeds expectations."
+      ]
+    }
+  },
+  "output_template": {
+    "columns": [
+      { "header": "Issue Resolved",       "path": "answers.issue_resolved.noul" },
+      { "header": "Factually Consistent", "path": "answers.factually_consistent.noul" },
+      { "header": "Policy Adherence",     "path": "answers.policy_adherence.noul" },
+      { "header": "Escalation Needed",    "path": "answers.escalation_needed.noul" },
+      { "header": "Customer Sentiment",   "path": "answers.customer_sentiment.choice" },
+      { "header": "Predicted CSAT",       "path": "answers.predicted_csat.score" },
+      {
+        "header": "Flag for Review",
+        "type": "confidence_flag",
+        "path": "answers.policy_adherence.noul",
+        "threshold": 0.5
+      }
+    ]
+  }
+}

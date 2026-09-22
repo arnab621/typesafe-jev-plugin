@@ -1,0 +1,107 @@
+{
+  "name": "UK VAT Classification",
+  "description": "Classifies products into UK VAT liability categories and infers intended use. Code looks up the rate from the returned category.",
+  "version": "1.0.0",
+  "model": "jev-1.13.0",
+  "state_template": {
+    "product": {
+      "name": "${col:Product Name}",
+      "description": "${col:Description}"
+    }
+  },
+  "questions": {
+    "vat_category": {
+      "type": "choice",
+      "instructions": "Classify the product described in `product` into the correct UK VAT category. Apply HMRC VAT liability rules.",
+      "criteria": {
+        "standard_rated": {
+          "what": "Standard-rated at 20% — default for goods/services not in another category",
+          "examples": ["alcohol", "confectionery", "crisps", "ice cream", "electronics", "adult clothing", "restaurant meals", "hot food sold for immediate consumption"]
+        },
+        "reduced_energy": {
+          "what": "Reduced-rated at 5% — domestic fuel and power",
+          "not_for": "Industrial or commercial energy supplies",
+          "examples": ["domestic gas", "domestic electricity", "home heating oil", "bottled LPG for home use"]
+        },
+        "reduced_health_welfare": {
+          "what": "Reduced-rated at 5% — specific HMRC-listed health and welfare goods",
+          "not_for": "General medicines or medical equipment",
+          "examples": ["children's car seats", "sanitary protection products", "nicotine patches and gum", "mobility aids for the elderly"]
+        },
+        "zero_food": {
+          "what": "Zero-rated at 0% — basic food and drink for human consumption, sold for home preparation",
+          "not_for": "Hot food, catering, alcohol, confectionery, crisps, ice cream, sports drinks, products with a chocolate coating",
+          "examples": ["fresh milk", "bread", "raw meat", "vegetables", "eggs", "pasta", "plain biscuits without chocolate coating"]
+        },
+        "zero_children_clothing": {
+          "what": "Zero-rated at 0% — clothing and footwear designed for children up to age 14 in recognised small sizes",
+          "not_for": "Adult sizes even if bought for a child",
+          "examples": ["baby grows", "children's school uniform in small sizes", "kids' shoes", "school shoes in a child's size"]
+        },
+        "zero_books_print": {
+          "what": "Zero-rated at 0% — books, newspapers, magazines, maps, music scores, and their digital equivalents",
+          "not_for": "Stationery, diaries without substantial printed content",
+          "examples": ["novel", "textbook", "newspaper", "OS map", "e-book", "academic journal"]
+        },
+        "zero_passenger_transport": {
+          "what": "Zero-rated at 0% — public passenger transport in vehicles carrying 10 or more passengers",
+          "not_for": "Taxis, private hire, vehicle rental, freight",
+          "examples": ["train ticket", "bus fare", "domestic flight", "ferry passenger ticket"]
+        },
+        "zero_pharmaceuticals": {
+          "what": "Zero-rated at 0% — prescription medicines dispensed by a registered pharmacist; certain medical equipment for disabled persons",
+          "not_for": "Over-the-counter medicines, supplements, cosmetics",
+          "examples": ["prescription antibiotics", "insulin on prescription", "stoma bags"]
+        },
+        "exempt_financial": {
+          "what": "Exempt — financial, insurance, and investment services; no VAT charged and no input VAT recovery",
+          "examples": ["bank fees", "insurance premiums", "fund management charges", "mortgage arrangement fees"]
+        },
+        "exempt_education": {
+          "what": "Exempt — education by an eligible body or private tuition in a school subject by an individual",
+          "not_for": "Commercial training courses from VAT-registered businesses",
+          "examples": ["school fees", "university tuition", "private maths tutoring by an individual"]
+        },
+        "exempt_medical_services": {
+          "what": "Exempt — healthcare services by a registered medical professional in their professional capacity",
+          "not_for": "Medical goods or equipment",
+          "examples": ["GP consultation", "physiotherapy", "dental treatment", "optician eye test"]
+        },
+        "outside_scope": {
+          "what": "Outside the scope of UK VAT — not a supply of goods or services in the course of a business",
+          "examples": ["wages", "charitable donations", "grants", "compensation payments"]
+        }
+      }
+    },
+    "intended_use": {
+      "type": "choice",
+      "instructions": "Based only on `product.name` and `product.description`, infer the product's most likely intended use. Do not rely on any explicitly stated intended use — infer it from the product itself.",
+      "criteria": {
+        "retail_home_consumption": "Sold through retail for use or consumption at home by end consumers",
+        "catering_food_service": "Supplied as part of a catering or food service operation — to restaurants, cafes, canteens, or for on-site consumption",
+        "children_specific": "Product designed, sized, or marketed specifically for use by children",
+        "domestic_residential": "Installed or used in a domestic or residential property — e.g. home energy, renovation materials",
+        "commercial_industrial": "Used in a commercial, manufacturing, or industrial operation",
+        "medical_healthcare": "Supplied or used in a medical, dental, or healthcare setting, or prescribed by a medical professional",
+        "education_training": "Used in formal education or training",
+        "financial_insurance": "A financial, insurance, or investment product or service",
+        "passenger_transport": "A passenger transport service for the general public",
+        "general_consumer": "A general consumer product not clearly fitting another category"
+      }
+    }
+  },
+  "output_template": {
+    "columns": [
+      { "header": "VAT Category",   "path": "answers.vat_category.choice" },
+      { "header": "VAT Confidence", "path": "answers.vat_category.confidence" },
+      { "header": "Intended Use",   "path": "answers.intended_use.choice" },
+      { "header": "Use Confidence", "path": "answers.intended_use.confidence" },
+      {
+        "header": "Needs Review",
+        "type": "confidence_flag",
+        "path": "answers.vat_category.confidence",
+        "threshold": 0.6
+      }
+    ]
+  }
+}
