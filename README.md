@@ -1,17 +1,19 @@
 # typesafe-jev-plugin
 
-A Claude plugin that lets you build reusable **solution signatures** for any classification or scoring problem, then run CSV, Excel, or text file datasets through the [TypeSafe Jev](https://docs.typesafe.ai) API and export structured results to Excel — all from within Claude Code.
+A Claude (Codex to follow soon) plugin that lets you build reusable schemas **(solution signatures)** for any classification or scoring problem, then run data from CSV, Excel, or text file datasets through the [TypeSafe AI](https://typesafe.ai/) API and export structured results to Excel — all from within Claude Code or Cowork.
 
 ---
 
 ## What is TypeSafe Jev?
 
+[source] (https://docs.typesafe.ai/introduction)
+
 Jev from Typesafe.ai is a "System One" AI model that returns **typed, calibrated judgments** instead of generating text. You define what to classify (a Choice), score (a Score), or verify (a Noul), and Jev returns a structured answer with a probability distribution — fast, cheap, and directly consumable by code.
 
 This plugin wraps that API into a two-step workflow:
 
-1. **Create a signature** — describe your use case once; the plugin generates a `.sig.json` file that includes the state and questions.
-2. **Run a dataset** — point it at a CSV or Excel file; the plugin calls Jev for every row and writes results back to Excel
+1. **Create a signature** — describe your use case via an iteractive mode; the plugin generates a `.sig.json` file that includes the state and questions.
+2. **Run a dataset** — point the signature JSON at a CSV or Excel file; the plugin calls Jev for every row (for excel/csv data) and writes results back based on your output template signature.
 
 ---
 
