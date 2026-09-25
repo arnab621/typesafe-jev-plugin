@@ -1,0 +1,152 @@
+{
+  "name": "Travel Review Analysis",
+  "description": "Analyses travel reviews to extract sentiment, the aspect of the trip being reviewed, inferred traveller type, recommendation strength, and whether a response is warranted.",
+  "version": "1.0.0",
+  "model": "jev-1.13.0",
+  "state_template": {
+    "destination": "${col:Destination}",
+    "review": "${col:Review}"
+  },
+  "questions": {
+    "sentiment": {
+      "type": "choice",
+      "instructions": "What is the overall sentiment expressed in `review` about `destination`?",
+      "criteria": {
+        "positive": {
+          "what": "The reviewer is broadly satisfied or delighted — praise outweighs any criticism.",
+          "not_for": "Reviews that balance positives and negatives roughly equally.",
+          "examples": ["Absolutely loved it, would go back in a heartbeat", "One of the best trips we've ever taken", "The scenery was stunning and the people were so welcoming"]
+        },
+        "neutral": {
+          "what": "The reviewer is matter-of-fact or balanced — no strong positive or negative lean.",
+          "not_for": "Reviews that are clearly more positive or more negative overall.",
+          "examples": ["It was fine, nothing special", "Had a decent time, did what it said on the tin", "Some good moments, some bad — about what we expected"]
+        },
+        "negative": {
+          "what": "The reviewer is broadly dissatisfied — complaints outweigh any positives.",
+          "not_for": "Reviews that acknowledge real problems but still recommend the destination.",
+          "examples": ["Would not recommend, complete waste of money", "The worst holiday we've had", "So disappointed — nothing lived up to the hype"]
+        },
+        "mixed": {
+          "what": "The reviewer expresses clearly conflicting feelings with roughly equal weight on both sides.",
+          "not_for": "Reviews that lean clearly in one direction despite a few caveats.",
+          "examples": ["The beaches were incredible but the service was terrible", "Loved the food, hated the crowds — genuinely torn", "Amazing nature, awful infrastructure — hard to call it"]
+        }
+      }
+    },
+    "aspect_focus": {
+      "type": "choice",
+      "instructions": "Which aspect of the travel experience does `review` focus on most? Judge from the body of the review, not the destination type.",
+      "criteria": {
+        "accommodation": {
+          "what": "The place they stayed — hotel, hostel, Airbnb, resort, campsite.",
+          "examples": ["Hotel room was tiny and overpriced", "The villa had its own pool and was stunning", "Hostel was clean and the staff were great"]
+        },
+        "food_dining": {
+          "what": "Restaurants, street food, local cuisine, cafes, markets, or nightlife.",
+          "examples": ["Street food scene is unreal — best I've had anywhere", "Found amazing local restaurants away from the tourist traps", "Every meal was a disappointment"]
+        },
+        "transport": {
+          "what": "Flights, trains, buses, taxis, car hire, or getting around the destination.",
+          "examples": ["Public transport was confusing and unreliable", "Rented a scooter — the best way to explore", "Transfer from the airport took 3 hours in traffic"]
+        },
+        "activities_attractions": {
+          "what": "Sightseeing, tours, museums, beaches, national parks, experiences, and excursions.",
+          "examples": ["The guided ruins tour was the highlight of the trip", "Beach was overcrowded with vendors every 10 metres", "Snorkelling the reef was a once-in-a-lifetime experience"]
+        },
+        "value_for_money": {
+          "what": "Price relative to quality — whether the trip felt worth the cost overall.",
+          "not_for": "Reviews about a specific hotel or meal price — use accommodation or food_dining.",
+          "examples": ["Far too expensive for what you get", "Incredible value — ate and drank well for very little", "Everything is tourist-priced and it adds up fast"]
+        },
+        "safety": {
+          "what": "Personal safety, petty crime, scams, road conditions, or health concerns.",
+          "examples": ["Had my bag snatched on day two", "Felt completely safe walking around at night", "Tuk-tuk drivers tried to overcharge us constantly"]
+        },
+        "local_culture": {
+          "what": "The people, language barriers, local customs, atmosphere, and cultural authenticity.",
+          "examples": ["Locals were incredibly welcoming and curious", "Felt very commercialised — hard to find anything authentic", "Language barrier made everything difficult but people were patient"]
+        },
+        "overall_experience": {
+          "what": "No single aspect dominates — the review covers the trip holistically.",
+          "not_for": "Reviews that clearly focus on one specific thing like food or hotels.",
+          "examples": ["An unforgettable destination all round", "Would not rush back but glad we went", "Does everything well — architecture, food, people, weather"]
+        }
+      }
+    },
+    "traveller_type": {
+      "type": "choice",
+      "instructions": "Infer the most likely traveller type from the language and context of `review`. Do not rely on explicit statements — infer from references to companions, activities, and priorities.",
+      "criteria": {
+        "solo": {
+          "what": "Travelling alone.",
+          "examples": ["Met so many interesting people at the hostel", "Loved having the freedom to change plans on a whim", "As a solo female traveller I felt safe the whole time"]
+        },
+        "couple": {
+          "what": "Two adults travelling together — often romantic.",
+          "examples": ["Perfect honeymoon destination", "We had a wonderful anniversary trip", "The two of us had the villa to ourselves"]
+        },
+        "family": {
+          "what": "Adults travelling with children.",
+          "examples": ["The kids loved the water park", "Finding child-friendly restaurants was a struggle", "Great destination for families with young children"]
+        },
+        "group": {
+          "what": "Three or more adults — friends, hen/stag parties, or group tours.",
+          "examples": ["Went with a group of six friends", "Perfect for a lads' trip", "Our group of twelve had an amazing time"]
+        },
+        "business": {
+          "what": "Work-related travel — conferences, meetings, or corporate stays.",
+          "examples": ["Was here for a conference for three days", "Good business hotel, efficient and central", "Quick work trip — only had one evening to explore"]
+        },
+        "unclear": {
+          "what": "Not enough context in the review to infer the traveller type reliably.",
+          "examples": ["Great place", "Very enjoyable", "Recommend visiting"]
+        }
+      }
+    },
+    "recommendation_strength": {
+      "type": "score",
+      "instructions": "How strongly does `review` recommend or discourage visiting `destination`? Judge from the overall tone and any explicit recommendation language.",
+      "criteria": [
+        "Actively discourages: explicitly warns others away, says they would not return, or advises skipping the destination entirely.",
+        "Leans negative: more dissatisfied than satisfied; would not enthusiastically recommend but stops short of a strong warning.",
+        "Neutral or conditional: recommends with significant caveats, or neither recommends nor discourages — 'it depends on what you want'.",
+        "Leans positive: broadly recommends and enjoyed the trip, but notes meaningful drawbacks worth knowing.",
+        "Highly recommends: enthusiastically endorses with little or no reservation — 'go, you won't regret it'."
+      ]
+    },
+    "genuine_review": {
+      "type": "noul",
+      "instructions": "Does `review` read like an authentic personal experience rather than a generic, templated, or potentially fake submission?",
+      "criteria": {
+        "true": "The review contains specific, personal details — named places, prices, dates, anecdotes, or emotional reactions consistent with a real visit. Imperfect language and minor complaints alongside praise are positive signals.",
+        "false": "The review is vague, generic, unusually short with no specifics, or contains patterns typical of fake or incentivised reviews — e.g. no concrete details, suspiciously perfect tone, or language that reads as a template."
+      }
+    },
+    "needs_response": {
+      "type": "noul",
+      "instructions": "Does `review` warrant a direct response from the business or tourism operator?",
+      "criteria": {
+        "true": "The review raises a specific complaint, describes an incident, asks a question, or mentions staff or facilities by name in a way a business should acknowledge publicly.",
+        "false": "The review is general praise, a neutral observation, or a personal opinion about the destination that does not require a business to respond."
+      }
+    }
+  },
+  "output_template": {
+    "columns": [
+      { "header": "Sentiment",          "path": "answers.sentiment.choice" },
+      { "header": "Sentiment Conf",     "path": "answers.sentiment.confidence" },
+      { "header": "Aspect Focus",       "path": "answers.aspect_focus.choice" },
+      { "header": "Traveller Type",     "path": "answers.traveller_type.choice" },
+      { "header": "Recommendation",     "path": "answers.recommendation_strength.score" },
+      { "header": "Genuine Review",     "path": "answers.genuine_review.noul" },
+      { "header": "Needs Response",     "path": "answers.needs_response.noul" },
+      {
+        "header": "Flag for Review",
+        "type": "confidence_flag",
+        "path": "answers.sentiment.confidence",
+        "threshold": 0.65
+      }
+    ]
+  }
+}

@@ -70,7 +70,7 @@ The result is a `.sig.json` file you can reuse and share.
 
 ### Step 3 — Run your dataset
 ```
-/typesafe-jev-plugin:run-dataset --input products.xlsx --signature vat.sig.json
+/typesafe-jev-plugin:run-dataset --input reviews.xlsx --signature travel_review.sig.json
 ```
 Results are written to `products_results.xlsx` with your original data plus Jev's answers appended as new columns.
 
@@ -82,34 +82,34 @@ Three ready-to-use signatures are included in `examples/`:
 
 | File | Mode | What it does |
 |---|---|---|
-| `vat_classification.sig.json` | Column-based | Classifies products into UK VAT categories |
+| `travel_review.sig.json` | Column-based | Analyses travel reviews for sentiment, aspect, traveller type, and recommendation strength |
 | `llm_guardrail.sig.json` | Column-based | Detects jailbreak attempts, identifies rule violated, scores severity |
 | `support_agent_review.sig.json` | Text file | Audits AI agent session traces for resolution, policy adherence, and CSAT |
 | `document_review.sig.json` | Text file | Reviews papers/reports across methodology, argument, evidence, and originality; produces editorial recommendation |
 
 **Input Excel** (column headers must match exactly):
 
-| Product Name | Description |
+| Destination | Review |
 |---|---|
-| Jaffa Cakes 12-pack | Round sponge with orange jelly, half-coated in dark chocolate |
-| Organic whole milk 2L | Fresh pasteurised full-fat cow's milk |
-| Children's school shoes size 3 | Leather school shoes, UK child's size 3 |
+| Santorini, Greece | The sunsets from Oia were breathtaking. Stayed at a cliffside villa — worth every penny. Crowds in August are intense though, go in May. |
+| Bangkok, Thailand | Street food is unreal — pad thai at 2am for next to nothing. Tuk-tuk drivers tried to scam us twice but otherwise amazing value. Would go back. |
+| Venice, Italy | Overpriced and overcrowded. Gondola was €90 for 30 minutes. The city is stunning but feels like a theme park now. Skip peak season. |
 
 **Run it:**
 ```
 /typesafe-jev-plugin:run-dataset \
-  --input products.xlsx \
-  --signature examples/vat_classification.sig.json \
+  --input reviews.xlsx \
+  --signature examples/travel_review.sig.json \
   --api-key ts-xxxxxxxxxxxx
 ```
 
 **Output Excel:**
 
-| Product Name | Description | VAT Category | VAT Confidence | Intended Use | Use Confidence | Needs Review |
-|---|---|---|---|---|---|---|
-| Jaffa Cakes 12-pack | ... | standard_rated | 0.74 | retail_home_consumption | 0.92 | No |
-| Organic whole milk 2L | ... | zero_food | 0.97 | retail_home_consumption | 0.95 | No |
-| Children's school shoes size 3 | ... | zero_children_clothing | 0.91 | children_specific | 0.96 | No |
+| Destination | Review | Sentiment | Sentiment Conf | Aspect Focus | Traveller Type | Recommendation | Genuine Review | Needs Response | Flag for Review |
+|---|---|---|---|---|---|---|---|---|---|
+| Santorini, Greece | ... | positive | 0.89 | overall_experience | couple | Highly recommends | 0.95 | No | No |
+| Bangkok, Thailand | ... | mixed | 0.82 | food_dining | couple | Neutral or conditional | 0.88 | No | No |
+| Venice, Italy | ... | negative | 0.86 | value_for_money | solo | Leans negative | 0.91 | Yes | No |
 
 A **Summary** sheet is also added with totals: rows processed, succeeded, errors, and rows flagged for low-confidence review.
 
@@ -203,8 +203,8 @@ A `.sig.json` file is a plain JSON file with four sections:
 
 ```json
 {
-  "name": "UK VAT Classification",
-  "description": "Classifies products into HMRC VAT categories",
+  "name": "Travel Review Analysis",
+  "description": "Analyses travel reviews for sentiment, aspect, traveller type, and recommendation",
   "version": "1.0.0",
   "model": "jev-1.13.0",
   "state_template": { ... },
@@ -219,10 +219,8 @@ Use `${col:Column Name}` placeholders. The runner substitutes the value from tha
 
 ```json
 "state_template": {
-  "product": {
-    "name": "${col:Product Name}",
-    "description": "${col:Description}"
-  }
+  "destination": "${col:Destination}",
+  "review":      "${col:Review}"
 }
 ```
 
@@ -232,14 +230,22 @@ The template can be nested as deeply as needed. Placeholder names must match you
 
 Three question types, all running in parallel per row:
 
-**Choice** — pick one from a defined set:
+**Choice** — pick one from a defined set. Criteria can be plain strings or structured objects with `what`, `not_for`, and `examples`:
 ```json
-"vat_category": {
+"sentiment": {
   "type": "choice",
-  "instructions": "Classify the product in `product` into the correct UK VAT category.",
+  "instructions": "What is the overall sentiment expressed in `review`?",
   "criteria": {
-    "zero_food": "Zero-rated at 0% — basic food for human consumption...",
-    "standard_rated": "Standard-rated at 20% — default for goods not in another category..."
+    "positive": {
+      "what": "The reviewer is broadly satisfied — praise outweighs any criticism.",
+      "not_for": "Reviews that balance positives and negatives roughly equally.",
+      "examples": ["Absolutely loved it, would go back in a heartbeat", "One of the best trips we've ever taken"]
+    },
+    "negative": {
+      "what": "The reviewer is broadly dissatisfied — complaints outweigh any positives.",
+      "examples": ["Would not recommend, complete waste of money", "So disappointed — nothing lived up to the hype"]
+    },
+    "mixed": "The reviewer expresses clearly conflicting feelings with roughly equal weight on both sides."
   }
 }
 ```
@@ -256,17 +262,17 @@ Three question types, all running in parallel per row:
 }
 ```
 
-**Score** — degree along a spectrum (ordered list of level descriptions):
+**Score** — degree along a spectrum (ordered list of level descriptions, lowest to highest):
 ```json
-"novelty_level": {
+"recommendation_strength": {
   "type": "score",
-  "instructions": "Rate the novelty of the advance claimed.",
+  "instructions": "How strongly does the review recommend or discourage visiting the destination?",
   "criteria": [
-    "Standard application of well-known techniques",
-    "Known techniques in a new context",
-    "Non-obvious combination requiring experimentation",
-    "Extends the state of the art meaningfully",
-    "Genuinely novel — publishable or patentable"
+    "Actively discourages: explicitly warns others away or says they would not return.",
+    "Leans negative: more dissatisfied than satisfied; would not enthusiastically recommend.",
+    "Neutral or conditional: recommends with significant caveats, or neither recommends nor discourages.",
+    "Leans positive: broadly recommends but notes meaningful drawbacks worth knowing.",
+    "Highly recommends: enthusiastically endorses with little or no reservation."
   ]
 }
 ```
@@ -276,9 +282,11 @@ Three question types, all running in parallel per row:
 ```json
 "output_template": {
   "columns": [
-    { "header": "VAT Category",  "path": "answers.vat_category.choice" },
-    { "header": "Confidence",    "path": "answers.vat_category.confidence" },
-    { "header": "Needs Review",  "type": "confidence_flag", "path": "answers.vat_category.confidence", "threshold": 0.6 }
+    { "header": "Sentiment",      "path": "answers.sentiment.choice" },
+    { "header": "Confidence",     "path": "answers.sentiment.confidence" },
+    { "header": "Recommendation", "path": "answers.recommendation_strength.score" },
+    { "header": "Genuine Review", "path": "answers.genuine_review.noul" },
+    { "header": "Flag for Review","type": "confidence_flag", "path": "answers.sentiment.confidence", "threshold": 0.65 }
   ]
 }
 ```
@@ -358,7 +366,7 @@ typesafe-jev-plugin/
 │   ├── typesafe_client.py              # HTTP API layer (swap here for SDK)
 │   └── validate_signature.py           # Signature validator CLI
 └── examples/
-    ├── vat_classification.sig.json     # UK VAT classification (column-based)
+    ├── travel_review.sig.json          # Travel review analysis (column-based)
     ├── llm_guardrail.sig.json          # LLM policy guardrail (column-based)
     ├── support_agent_review.sig.json   # AI agent session audit (text file mode)
     └── document_review.sig.json        # Paper/report review and scoring (text file mode)
